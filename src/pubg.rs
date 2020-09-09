@@ -33,16 +33,11 @@ pub mod guns {
         let gun_list = get_gun_list();
         if gun_list.is_ok() {
             let guns = gun_list.unwrap();
-            // let gun1 = get_gun_stats(&guns, "AKM".to_string());
-            // let gun2 = get_gun_stats(&guns, "Mk47 Mutant".to_string());
             let winner = compare_guns(
                 get_gun_stats(&guns, gun1.to_string()),
                 get_gun_stats(&guns, gun2.to_string()),
             );
-            println!("{:?}", winner);
-            let res = winner.clone();
-            GunVsGun::Gun(res)
-        // GunVsGun::Gun(&winner)
+            GunVsGun::Gun(winner)
         } else {
             println!("ERR");
             GunVsGun::ErrMessage("Error")
@@ -65,8 +60,8 @@ pub mod guns {
     }
 
     // get a specific gun from the list
-    fn get_gun_stats(gun_list: &Vec<GunStats>, gun_name: String) -> GunStats {
-        *gun_list.iter().find(|&gun| gun.Name == gun_name).unwrap()
+    fn get_gun_stats<'a>(gun_list: &'a Vec<GunStats>, gun_name: String) -> &'a GunStats {
+        gun_list.iter().find(|&gun| gun.Name == gun_name).unwrap()
     }
 
     fn compare_guns<'a>(gun1: &'a GunStats, gun2: &'a GunStats) -> &'a GunStats {
