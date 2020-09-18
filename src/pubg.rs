@@ -6,8 +6,8 @@ pub mod guns {
 
     // explanations for data below https://pubg.gamepedia.com/Data_Key
     // Note: Enums can be used with structs
-    #[derive(Serialize, Deserialize, Debug)]
-    struct GunStats {
+    #[derive(Serialize, Deserialize, Debug, Clone)]
+    pub struct GunStats {
         BDMG0: String,
         BDMG1: String,
         BDMG2: String,
@@ -24,23 +24,30 @@ pub mod guns {
     }
 
     #[derive(Debug)]
-    enum GunVsGun<'a> {
-        Gun(&'a GunStats),
-        ErrMessage(&'a str),
+    pub enum GunVsGun {
+        Gun(GunStats),
+        ErrMessage(String),
     }
 
-    pub fn gun_vs_gun(gun1: String, gun2: String) -> GunVsGun<'static> {
+    pub fn gun_vs_gun<'a>(gun1: &'a String, gun2: &'a String) -> GunVsGun {
         let gun_list = get_gun_list();
         if gun_list.is_ok() {
             let guns = gun_list.unwrap();
-            let winner = compare_guns(
-                get_gun_stats(&guns, gun1.to_string()),
-                get_gun_stats(&guns, gun2.to_string()),
-            );
+            let get_gun_stats = |gun_list: &Vec<GunStats>, gun_name: String| -> GunStats {
+                gun_list
+                    .iter()
+                    .find(|gun| gun.Name == gun_name)
+                    .unwrap()
+                    .clone()
+            };
+
+            let gun1_stats = get_gun_stats(&guns, gun1.to_string());
+            let gun2_stats = get_gun_stats(&guns, gun2.to_string());
+            let winner = compare_guns(&gun1_stats, &gun2_stats);
             GunVsGun::Gun(winner)
         } else {
             println!("ERR");
-            GunVsGun::ErrMessage("Error")
+            GunVsGun::ErrMessage("Error".to_string())
         }
     }
     // read the gun list from the file and return as json array
@@ -52,23 +59,18 @@ pub mod guns {
         file.read_to_string(&mut contents)?;
 
         // convert to serde_json format
-        let file_contents_to_json: Value = serde_json::from_str(&contents).unwrap();
+        let file_contents_to_json: Value = serde_json::from_str(&mut contents).unwrap();
         // convert to an array with the gun objects
         let res: Vec<GunStats> = serde_json::from_value(file_contents_to_json).unwrap();
 
         Ok(res)
     }
 
-    // get a specific gun from the list
-    fn get_gun_stats<'a>(gun_list: &'a Vec<GunStats>, gun_name: String) -> &'a GunStats {
-        gun_list.iter().find(|&gun| gun.Name == gun_name).unwrap()
-    }
-
-    fn compare_guns<'a>(gun1: &'a GunStats, gun2: &'a GunStats) -> &'a GunStats {
+    fn compare_guns(gun1: &GunStats, gun2: &GunStats) -> GunStats {
         if gun1.BDMG1 > gun2.BDMG1 {
-            gun1
+            gun1.clone()
         } else {
-            gun2
+            gun2.clone()
         }
     }
 }

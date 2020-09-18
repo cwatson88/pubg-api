@@ -20,7 +20,7 @@ async fn start_server() {
 
     let guns =
         warp::path!("weaponvsweapon" / String / "vs" / String).map(|gun1: String, gun2: String| {
-            let res = pubg::guns::gun_vs_gun(gun1, gun2);
+            let res = pubg::guns::gun_vs_gun(&gun1, &gun2);
             format!("{:#?}", res)
         });
 
