@@ -1,3 +1,6 @@
+use std::error::Error;
+extern crate reqwest;
+
 pub mod guns {
     use serde::{Deserialize, Serialize};
     use serde_json::{Result, Value};
@@ -23,7 +26,7 @@ pub mod guns {
         SPD: String,
     }
 
-    #[derive(Debug)]
+    #[derive(Debug, Serialize, Deserialize)]
     pub enum GunVsGun {
         Gun(GunStats),
         ErrMessage(String),
@@ -75,8 +78,44 @@ pub mod guns {
     }
 }
 
-pub mod player {
-    pub fn hello() {
-        println!("wow we hit the plaer meth")
-    }
+async fn api_get(endpoint: &str) -> Result<String, Box<Error>> {
+    use reqwest::header;
+    use serde_json::{Result, Value};
+
+    const key: &str = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJqdGkiOiI0YmQ2ZTJmMC1jM2M1LTAxMzgtOTQ0ZS0xOTdlNDVlMjM0OWUiLCJpc3MiOiJnYW1lbG9ja2VyIiwiaWF0IjoxNTk3Nzg1MDg0LCJwdWIiOiJibHVlaG9sZSIsInRpdGxlIjoicHViZyIsImFwcCI6ImN3YXRzb24xOTg4LWdtIn0.Mt8A76L-gEWUvCpcrYAo4Wl1dS0sA23oKZjhdEJSqfA";
+
+    const base_url: &str = "https://api.pubg.com";
+    let url = format!("{}{}", base_url, endpoint);
+    let mut headers = header::HeaderMap::new();
+    headers.insert(
+        header::AUTHORIZATION,
+        header::HeaderValue::from_static("bearer"),
+    );
+    headers.insert(
+        header::ACCEPT,
+        header::HeaderValue::from_static("application/vnd.api+json"),
+    );
+
+    // get a client builder
+    let client = reqwest::Client::builder()
+        .default_headers(headers)
+        .build()?;
+
+    let res = client
+        .get(&url)
+        // .header(header::AUTHORIZATION, key)
+        .send()
+        .await?
+        .text()
+        .await?;
+
+    println!("{:#?}", res);
+    Ok(res)
+}
+
+pub async fn player(player: &str) -> Result<String, Box<Error>> {
+    let player_endpoint = "/shards/stadia/players?filter[playerNames]=";
+    let player_search = format!("{}{}", &player_endpoint, &player);
+    let res = api_get(&player_search).await;
+    Ok(res)
 }

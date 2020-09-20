@@ -1,4 +1,7 @@
+use serde_json::json;
+use std::error::Error;
 use warp::Filter;
+
 mod pubg;
 
 #[tokio::main]
@@ -20,11 +23,23 @@ async fn start_server() {
 
     let guns =
         warp::path!("weaponvsweapon" / String / "vs" / String).map(|gun1: String, gun2: String| {
-            let res = pubg::guns::gun_vs_gun(&gun1, &gun2);
-            format!("{:#?}", res)
+            let gun = pubg::guns::gun_vs_gun(&gun1, &gun2);
+            let gun_json = &json!(&gun);
+            println!("{:?}", &gun);
+            format!("{:#?}", gun_json)
         });
 
-    let routes = warp::get().and(hi.or(hello_from_warp).or(times).or(guns));
+    let players = warp::path!("player" / String).map(|player: String| async {
+        let res = pubg::player(&player);
+        // println!("{:#?}", res);
+        format!("{:#?}", res.await.unwrap())
+    });
+
+    async fn playaz(player: String) -> String {
+        pubg::player(&player).await.unwrap()
+    }
+
+    let routes = warp::get().and(hi.or(hello_from_warp).or(times).or(guns).and_then(playaz));
 
     warp::serve(routes).run(([127, 0, 0, 1], 3030)).await;
 }
