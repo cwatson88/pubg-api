@@ -1,3 +1,5 @@
+use percent_encoding::percent_decode_str;
+use serde_json::{json, Result as JSONResult, Value};
 use std::error::Error;
 extern crate reqwest;
 
@@ -103,19 +105,32 @@ async fn api_get(endpoint: &str) -> Result<String, Box<Error>> {
 
     let res = client
         .get(&url)
-        // .header(header::AUTHORIZATION, key)
+        .header(header::AUTHORIZATION, key) // used to pass the key
         .send()
         .await?
         .text()
         .await?;
 
-    println!("{:#?}", res);
+    // println!("{:#?}", res);
     Ok(res)
 }
 
-pub async fn player(player: &str) -> Result<String, Box<Error>> {
+pub async fn get_player(player: &str) -> Result<String, Box<Error>> {
     let player_endpoint = "/shards/stadia/players?filter[playerNames]=";
     let player_search = format!("{}{}", &player_endpoint, &player);
-    let res = api_get(&player_search).await;
-    Ok(res)
+    api_get(&player_search).await
+}
+
+pub async fn weapon_mastery(player: &str) -> Result<String, Box<Error>> {
+    let player = get_player(&player).await.unwrap();
+    let player_result: Value = serde_json::from_str(&player).unwrap();
+    let account_id = &player_result["data"][0]["id"].to_string();
+    println!(
+        "{:#?}",
+        percent_decode_str(&account_id).decode_utf8().unwrap()
+    );
+    assert_eq!(account_id, "account.c7763c41ba4246d497db2b85ff68a897");
+    // account.c7763c41ba4246d497db2b85ff68a897
+    let weapon_mastery_url = format!("/shards/stadia/players/{:?}/weapon_mastery", &account_id);
+    api_get(&weapon_mastery_url).await
 }

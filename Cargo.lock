@@ -767,6 +767,7 @@ name = "pubg_rust_server"
 version = "0.1.0"
 dependencies = [
  "parking_lot",
+ "percent-encoding",
  "reqwest",
  "serde",
  "serde_json",
@@ -985,6 +986,7 @@ dependencies = [
  "percent-encoding",
  "pin-project-lite",
  "serde",
+ "serde_json",
  "serde_urlencoded",
  "tokio",
  "tokio-tls",
