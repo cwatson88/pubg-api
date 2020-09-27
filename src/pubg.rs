@@ -1,5 +1,6 @@
 use percent_encoding::percent_decode_str;
 use serde_json::{json, Result as JSONResult, Value};
+use std::collections::HashMap;
 use std::error::Error;
 extern crate reqwest;
 
@@ -80,14 +81,16 @@ pub mod guns {
     }
 }
 
-async fn api_get(endpoint: &str) -> Result<String, Box<Error>> {
+async fn api_get(endpoint: &str) -> Result<Value, reqwest::Error> {
     use reqwest::header;
     use serde_json::{Result, Value};
 
     const key: &str = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJqdGkiOiI0YmQ2ZTJmMC1jM2M1LTAxMzgtOTQ0ZS0xOTdlNDVlMjM0OWUiLCJpc3MiOiJnYW1lbG9ja2VyIiwiaWF0IjoxNTk3Nzg1MDg0LCJwdWIiOiJibHVlaG9sZSIsInRpdGxlIjoicHViZyIsImFwcCI6ImN3YXRzb24xOTg4LWdtIn0.Mt8A76L-gEWUvCpcrYAo4Wl1dS0sA23oKZjhdEJSqfA";
 
     const base_url: &str = "https://api.pubg.com";
+
     let url = format!("{}{}", base_url, endpoint);
+
     let mut headers = header::HeaderMap::new();
     headers.insert(
         header::AUTHORIZATION,
@@ -108,29 +111,38 @@ async fn api_get(endpoint: &str) -> Result<String, Box<Error>> {
         .header(header::AUTHORIZATION, key) // used to pass the key
         .send()
         .await?
-        .text()
+        // .text()
+        .json()
         .await?;
 
     // println!("{:#?}", res);
     Ok(res)
 }
 
-pub async fn get_player(player: &str) -> Result<String, Box<Error>> {
+pub async fn get_player(player: &str) -> Result<Value, reqwest::Error> {
     let player_endpoint = "/shards/stadia/players?filter[playerNames]=";
     let player_search = format!("{}{}", &player_endpoint, &player);
     api_get(&player_search).await
 }
 
-pub async fn weapon_mastery(player: &str) -> Result<String, Box<Error>> {
+pub async fn get_account_id(player: &str) -> String {
     let player = get_player(&player).await.unwrap();
-    let player_result: Value = serde_json::from_str(&player).unwrap();
-    let account_id = &player_result["data"][0]["id"].to_string();
-    println!(
-        "{:#?}",
-        percent_decode_str(&account_id).decode_utf8().unwrap()
-    );
-    assert_eq!(account_id, "account.c7763c41ba4246d497db2b85ff68a897");
-    // account.c7763c41ba4246d497db2b85ff68a897
-    let weapon_mastery_url = format!("/shards/stadia/players/{:?}/weapon_mastery", &account_id);
+    // as_str and String::From is needed to remove the quotes from a string
+    let account_id = String::from(player["data"][0]["id"].as_str().unwrap());
+    account_id
+}
+
+pub async fn weapon_mastery(player: &str) -> Result<Value, reqwest::Error> {
+    let account_id = get_account_id(&player).await;
+    let weapon_mastery_url = format!("/shards/stadia/players/{}/weapon_mastery", &account_id);
     api_get(&weapon_mastery_url).await
+}
+
+// use tokio for async function testing
+#[tokio::test]
+// enable println by using "cargo test -- --nocapture"
+async fn test_get_account_id() {
+    let account_id = get_account_id("SeeWats0n").await;
+    println!("{}", account_id);
+    assert_eq!(account_id, "account.c7763c41ba4246d497db2b85ff68a897");
 }

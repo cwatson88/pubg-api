@@ -10,7 +10,10 @@ async fn main() -> Result<()> {
     let player_name = "SeeWats0n";
     let player = pubg::get_player(&player_name).await.unwrap();
     let weapons = pubg::weapon_mastery(&player_name).await.unwrap();
-    println!("{:?}", weapons);
+    println!(
+        "{:?}",
+        weapons["data"]["attributes"]["weaponSummaries"].to_string()
+    );
     Ok(())
 }
 
