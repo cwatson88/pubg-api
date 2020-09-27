@@ -8,8 +8,9 @@ mod pubg;
 async fn main() -> Result<()> {
     // start_server().await;
     let player_name = "SeeWats0n";
+    let account_id = pubg::get_account_id(player_name).await.unwrap();
     let player = pubg::get_player(&player_name).await.unwrap();
-    let weapons = pubg::weapon_mastery(&player_name).await.unwrap();
+    let weapons = pubg::weapon_mastery(&account_id).await.unwrap();
     println!(
         "{:?}",
         weapons["data"]["attributes"]["weaponSummaries"].to_string()
