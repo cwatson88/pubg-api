@@ -8,7 +8,7 @@ use std::collections::HashMap;
 pub struct WeaponMasterySummary {
     /// Player ID (also known as account ID)
     #[serde(rename = "accountId")]
-    pub account_id: Option<String>,
+    pub account_id: String,
 
     #[serde(rename = "attributes")]
     pub attributes: Attributes,
@@ -18,11 +18,11 @@ pub struct WeaponMasterySummary {
 pub struct Attributes {
     /// The match ID of the last completed match that was played.
     #[serde(rename = "latestMatchId")]
-    pub latest_match_id: Option<String>,
+    pub latest_match_id: String,
 
     /// The platform
     #[serde(rename = "platform")]
-    pub platform: Option<String>,
+    pub platform: String,
 
     /// The weapon summary for each weapon
     #[serde(rename = "weaponSummaries")]
@@ -45,34 +45,34 @@ pub struct Attributes {
 pub struct ItemWeapon {
     /// The current level of this weapon
     #[serde(rename = "LevelCurrent")]
-    pub level_current: Option<i64>,
+    pub level_current: i64,
 
     /// All of the medals received for this weapon
     #[serde(rename = "Medals")]
-    pub medals: Option<Vec<Medal>>,
+    pub medals: Vec<Medal>,
 
     /// The weapon mastery stats for this weapon
     #[serde(rename = "StatsTotal")]
-    pub stats_total: Option<StatsTotal>,
+    pub stats_total: StatsTotal,
 
     /// The current tier of this weapon
     #[serde(rename = "TierCurrent")]
-    pub tier_current: Option<i64>,
+    pub tier_current: i64,
 
     /// The total amount of XP earned for this weapon
     #[serde(rename = "XPTotal")]
-    pub xp_total: Option<i64>,
+    pub xp_total: i64,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Medal {
     /// The number of times that the player received the medal
     #[serde(rename = "Count")]
-    pub count: Option<i64>,
+    pub count: i64,
 
     /// The name of the medal
     #[serde(rename = "MedalId")]
-    pub medal_id: Option<String>,
+    pub medal_id: String,
 }
 
 /// The weapon mastery stats for this weapon
@@ -80,51 +80,51 @@ pub struct Medal {
 pub struct StatsTotal {
     /// The total damage that the player has done in their career
     #[serde(rename = "DamagePlayer")]
-    pub damage_player: Option<f64>,
+    pub damage_player: f64,
 
     /// The total number of defeats in their career
     #[serde(rename = "Defeats")]
-    pub defeats: Option<i64>,
+    pub defeats: i64,
 
     /// The total number of times that the player has caused another player to become groggy
     /// during their career
     #[serde(rename = "Groggies")]
-    pub groggies: Option<i64>,
+    pub groggies: i64,
 
     /// The total headshots that the player has done in their career
     #[serde(rename = "HeadShots")]
-    pub head_shots: Option<i64>,
+    pub head_shots: i64,
 
     /// The total number of kills for the player
     #[serde(rename = "Kills")]
-    pub kills: Option<i64>,
+    pub kills: i64,
 
     /// The longest distance that the player got a defeat for
     #[serde(rename = "LongestDefeat")]
-    pub longest_defeat: Option<f64>,
+    pub longest_defeat: f64,
 
     /// The number of long range defeats for the player
     #[serde(rename = "LongRangeDefeats")]
-    pub long_range_defeats: Option<i64>,
+    pub long_range_defeats: i64,
 
     /// The most damage that the player did in a single match
     #[serde(rename = "MostDamagePlayerInAGame")]
-    pub most_damage_player_in_a_game: Option<f64>,
+    pub most_damage_player_in_a_game: f64,
 
     /// Most defeats in a single match
     #[serde(rename = "MostDefeatsInAGame")]
-    pub most_defeats_in_a_game: Option<i64>,
+    pub most_defeats_in_a_game: i64,
 
     /// The highest number of times that the player has caused another player to become groggy
     /// during a match
     #[serde(rename = "MostGroggiesInAGame")]
-    pub most_groggies_in_a_game: Option<i64>,
+    pub most_groggies_in_a_game: i64,
 
     /// The most headshots that the player did in a single match
     #[serde(rename = "MostHeadShotsInAGame")]
-    pub most_head_shots_in_a_game: Option<i64>,
+    pub most_head_shots_in_a_game: i64,
 
     /// The most kills for a player in a single match
     #[serde(rename = "MostKillsInAGame")]
-    pub most_kills_in_a_game: Option<i64>,
+    pub most_kills_in_a_game: i64,
 }

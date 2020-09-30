@@ -22,16 +22,16 @@ async fn main() -> Result<()> {
     a.sort_by(|(key_a, val_a), (key_b,val_b)| {
         let weapon_a = val_a.as_ref().unwrap();
         // let StatsTotal{kills:kills_a, ..} = &weapon_a.stats_total.as_ref().unwrap();
-        let kills_a = &weapon_a.stats_total.as_ref().unwrap().kills;
+        let kills_a = &weapon_a.stats_total.kills;
 
         let weapon_b = &val_b.as_ref().unwrap();
-        let kills_b = &weapon_b.stats_total.as_ref().unwrap().kills;
+        let kills_b = &weapon_b.stats_total.kills;
         
         kills_b.cmp(&kills_a)
     });
 
     // gat top x weapons of kills 
-    (0..5).for_each(|index|println!("{:#?} -- {:#?}",&a[index].0,&a[index].1.as_ref().unwrap().stats_total.as_ref().unwrap()));
+    (0..5).for_each(|index|println!("{:#?} -- {:#?}",&a[index].0,&a[index].1.as_ref().unwrap().stats_total));
 
 
     Ok(())
