@@ -1,8 +1,9 @@
 use percent_encoding::percent_decode_str;
-use serde_json::{json, Result as JSONResult, Value};
+use serde_json::{json, Error, Result as JSONResult, Value};
 use std::collections::HashMap;
-use std::error::Error;
+// use std::error::Error;
 extern crate reqwest;
+pub mod weapon_structs;
 
 pub mod guns {
     use serde::{Deserialize, Serialize};
@@ -14,19 +15,32 @@ pub mod guns {
     // Note: Enums can be used with structs
     #[derive(Serialize, Deserialize, Debug, Clone)]
     pub struct GunStats {
-        BDMG0: String,
-        BDMG1: String,
-        BDMG2: String,
-        BDMG3: String,
-        DMG: String, // DMG can be type "null"
-        HDMG0: String,
-        HDMG1: String,
-        HDMG2: String,
-        HDMG3: String,
-        Image: String,
-        Name: String,
-        PWR: String,
-        SPD: String,
+        #[serde(rename = "BDMG0")]
+        bdgm0: String,
+        #[serde(rename = "BDMG1")]
+        bdmg1: String,
+        #[serde(rename = "BDMG2")]
+        bdmg2: String,
+        #[serde(rename = "BDMG3")]
+        bdmg3: String,
+        #[serde(rename = "DMG")]
+        dmg: String, // DMG can be type "null"
+        #[serde(rename = "HDMG0")]
+        hdmg0: String,
+        #[serde(rename = "HDMG1")]
+        hdmg1: String,
+        #[serde(rename = "HDMG2")]
+        hdmg2: String,
+        #[serde(rename = "HDMG3")]
+        hdmg3: String,
+        #[serde(rename = "IMAGE")]
+        image: String,
+        #[serde(rename = "NAME")]
+        name: String,
+        #[serde(rename = "PWR")]
+        pwr: String,
+        #[serde(rename = "SPD")]
+        spd: String,
     }
 
     #[derive(Debug, Serialize, Deserialize)]
@@ -42,7 +56,7 @@ pub mod guns {
             let get_gun_stats = |gun_list: &Vec<GunStats>, gun_name: String| -> GunStats {
                 gun_list
                     .iter()
-                    .find(|gun| gun.Name == gun_name)
+                    .find(|gun| gun.name == gun_name)
                     .unwrap()
                     .clone()
             };
@@ -73,7 +87,7 @@ pub mod guns {
     }
 
     fn compare_guns(gun1: &GunStats, gun2: &GunStats) -> GunStats {
-        if gun1.BDMG1 > gun2.BDMG1 {
+        if gun1.bdmg1 > gun2.bdmg1 {
             gun1.clone()
         } else {
             gun2.clone()
@@ -85,11 +99,11 @@ async fn api_get(endpoint: &str) -> Result<Value, reqwest::Error> {
     use reqwest::header;
     use serde_json::{Result, Value};
 
-    const key: &str = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJqdGkiOiI0YmQ2ZTJmMC1jM2M1LTAxMzgtOTQ0ZS0xOTdlNDVlMjM0OWUiLCJpc3MiOiJnYW1lbG9ja2VyIiwiaWF0IjoxNTk3Nzg1MDg0LCJwdWIiOiJibHVlaG9sZSIsInRpdGxlIjoicHViZyIsImFwcCI6ImN3YXRzb24xOTg4LWdtIn0.Mt8A76L-gEWUvCpcrYAo4Wl1dS0sA23oKZjhdEJSqfA";
+    const KEY: &str = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJqdGkiOiI0YmQ2ZTJmMC1jM2M1LTAxMzgtOTQ0ZS0xOTdlNDVlMjM0OWUiLCJpc3MiOiJnYW1lbG9ja2VyIiwiaWF0IjoxNTk3Nzg1MDg0LCJwdWIiOiJibHVlaG9sZSIsInRpdGxlIjoicHViZyIsImFwcCI6ImN3YXRzb24xOTg4LWdtIn0.Mt8A76L-gEWUvCpcrYAo4Wl1dS0sA23oKZjhdEJSqfA";
 
-    const base_url: &str = "https://api.pubg.com";
+    const BASE_URL: &str = "https://api.pubg.com";
 
-    let url = format!("{}{}", base_url, endpoint);
+    let url = format!("{}{}", BASE_URL, endpoint);
 
     let mut headers = header::HeaderMap::new();
     headers.insert(
@@ -108,7 +122,7 @@ async fn api_get(endpoint: &str) -> Result<Value, reqwest::Error> {
 
     let res = client
         .get(&url)
-        .header(header::AUTHORIZATION, key) // used to pass the key
+        .header(header::AUTHORIZATION, KEY) // used to pass the key
         .send()
         .await?
         .json()
@@ -117,6 +131,8 @@ async fn api_get(endpoint: &str) -> Result<Value, reqwest::Error> {
     Ok(res)
 }
 
+///  Return all the stats on a player including the account id using the gamer name
+/// `/shards/stadia/players?filter[playerNames]=`
 pub async fn get_player(player: &str) -> Result<Value, reqwest::Error> {
     let player_endpoint = "/shards/stadia/players?filter[playerNames]=";
     // using format to concatenate strings
@@ -124,6 +140,7 @@ pub async fn get_player(player: &str) -> Result<Value, reqwest::Error> {
     api_get(&player_search).await
 }
 
+/// Return the player account - this is needed for most api calls - it is NOT the gamer tag
 pub async fn get_account_id(player: &str) -> Result<String, reqwest::Error> {
     let player = get_player(&player).await.unwrap();
     // as_str and String::From is needed to remove the quotes from a string
@@ -131,9 +148,15 @@ pub async fn get_account_id(player: &str) -> Result<String, reqwest::Error> {
     Ok(account_id)
 }
 
-pub async fn weapon_mastery(account_id: &str) -> Result<Value, reqwest::Error> {
+/// get the weapon mastery stats for a player
+/// `/shards/stadia/players/{}/weapon_mastery`
+pub async fn weapon_mastery(
+    account_id: &str,
+) -> Result<weapon_structs::WeaponMasterySummary, Error> {
     let weapon_mastery_url = format!("/shards/stadia/players/{}/weapon_mastery", &account_id);
-    api_get(&weapon_mastery_url).await
+    let res =
+        serde_json::from_str(&api_get(&weapon_mastery_url).await.unwrap()["data"].to_string());
+    res
 }
 
 // use tokio for async function testing
