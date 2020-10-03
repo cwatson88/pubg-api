@@ -1,7 +1,5 @@
-use percent_encoding::percent_decode_str;
 use serde_json::{json, Error, Result as JSONResult, Value};
 use std::collections::HashMap;
-// use std::error::Error;
 extern crate reqwest;
 pub mod weapon_structs;
 
@@ -97,7 +95,7 @@ pub mod guns {
 
 async fn api_get(endpoint: &str) -> Result<Value, reqwest::Error> {
     use reqwest::header;
-    use serde_json::{Result, Value};
+    // use serde_json::{Result, Value};
 
     const KEY: &str = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJqdGkiOiI0YmQ2ZTJmMC1jM2M1LTAxMzgtOTQ0ZS0xOTdlNDVlMjM0OWUiLCJpc3MiOiJnYW1lbG9ja2VyIiwiaWF0IjoxNTk3Nzg1MDg0LCJwdWIiOiJibHVlaG9sZSIsInRpdGxlIjoicHViZyIsImFwcCI6ImN3YXRzb24xOTg4LWdtIn0.Mt8A76L-gEWUvCpcrYAo4Wl1dS0sA23oKZjhdEJSqfA";
 
@@ -134,14 +132,13 @@ async fn api_get(endpoint: &str) -> Result<Value, reqwest::Error> {
 ///  Return all the stats on a player including the account id using the gamer name
 /// `/shards/stadia/players?filter[playerNames]=`
 pub async fn get_player(player: &str) -> Result<Value, reqwest::Error> {
-    let player_endpoint = "/shards/stadia/players?filter[playerNames]=";
     // using format to concatenate strings
-    let player_search = format!("{}{}", &player_endpoint, &player);
+    let player_search = format!("/shards/stadia/players?filter[playerNames]={}", &player);
     api_get(&player_search).await
 }
 
 /// Return the player account - this is needed for most api calls - it is NOT the gamer tag
-pub async fn get_account_id(player: &str) -> Result<String, reqwest::Error> {
+pub async fn get_account_id(player: &str) -> Result<String, Error> {
     let player = get_player(&player).await.unwrap();
     // as_str and String::From is needed to remove the quotes from a string
     let account_id = String::from(player["data"][0]["id"].as_str().unwrap());
@@ -154,15 +151,5 @@ pub async fn weapon_mastery(
     account_id: &str,
 ) -> Result<weapon_structs::WeaponMasterySummary, Error> {
     let weapon_mastery_url = format!("/shards/stadia/players/{}/weapon_mastery", &account_id);
-    let res =
-        serde_json::from_str(&api_get(&weapon_mastery_url).await.unwrap()["data"].to_string());
-    res
-}
-
-// use tokio for async function testing
-#[tokio::test]
-// enable println by using "cargo test -- --nocapture"
-async fn test_get_account_id() {
-    // println!("{}", account_id);
-    // assert_eq!(account_id, "account.c7763c41ba4246d497db2b85ff68a897");
+    serde_json::from_str(&api_get(&weapon_mastery_url).await.unwrap()["data"].to_string())
 }

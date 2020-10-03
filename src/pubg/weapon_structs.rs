@@ -7,7 +7,7 @@ use std::collections::HashMap;
 #[derive(Serialize, Deserialize, Debug)]
 pub struct WeaponMasterySummary {
     /// Player ID (also known as account ID)
-    #[serde(rename = "accountId")]
+    #[serde(rename = "id")]
     pub account_id: String,
 
     #[serde(rename = "attributes")]
