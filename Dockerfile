@@ -3,7 +3,7 @@
 FROM rust:1.27.0
 
 # Copy local code to the container image.
-WORKDIR /usr/src/pubg
+WORKDIR /pubg_rust_server
 COPY . .
 
 # Install production dependencies and build a release artifact.
@@ -14,4 +14,4 @@ RUN cargo install
 ENV PORT 8080
 
 # Run the web service on container startup.
-CMD ["hellorust"]
+CMD ["./main"]

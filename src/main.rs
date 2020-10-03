@@ -33,7 +33,7 @@ async fn start_server() {
 
     let routes = warp::get().and(guns); //.or(player_route));
 
-    warp::serve(routes).run(([127, 0, 0, 1], 3030)).await;
+    warp::serve(routes).run(([0, 0, 0, 0], 8080)).await;
 }
 
 async fn pbg() {
