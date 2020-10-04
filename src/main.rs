@@ -1,18 +1,18 @@
-use serde_json::{json, Deserializer, Map, Result, Value};
-use std::error::Error;
-use std::iter::FromIterator;
+use serde_json::{json, Deserializer, Error, Map, Value};
+use std::{convert::Infallible, iter::FromIterator};
 use warp::{http::StatusCode, Filter};
 
 mod inventory;
 mod pubg;
 
 #[tokio::main]
-async fn main() -> Result<()> {
+async fn main() -> Result<(), Error> {
     start_server().await;
     Ok(())
 }
 
 async fn start_server() {
+    let hi = warp::path("hi").map(|| "Hello, World!");
     let guns =
         warp::path!("weaponvsweapon" / String / "vs" / String).map(|gun1: String, gun2: String| {
             let gun = pubg::guns::gun_vs_gun(&gun1, &gun2);
@@ -21,47 +21,53 @@ async fn start_server() {
             format!("{:#?}", gun_json)
         });
 
-    // async fn player_stats(player: String) -> Result<Box<dyn warp::Reply>, warp::Rejection> {
-    //     if !&player.is_empty() {
-    //         Ok(Box::new(pubg::get_player(&player).await.unwrap()))
-    //     } else {
-    //         Ok(Box::new(StatusCode::BAD_REQUEST))
-    //     }
-    // }
+    let player_route = warp::path!("player" / String).and_then(player_stats);
+    let top_guns_route = warp::path!("topguns" / String).and_then(top_x_guns);
 
-    // let player_route = warp::path!("player" / String).and_then(player_stats);
-
-    let routes = warp::get().and(guns); //.or(player_route));
+    let routes = warp::get().and(hi.or(guns).or(player_route).or(top_guns_route)); //.or(player_route));
 
     warp::serve(routes).run(([0, 0, 0, 0], 8080)).await;
 }
 
-async fn pbg() {
-    let player_name = "SeeWats0n";
-    // let player_name = "Kirri";
-    // let player_name = "DaliRafter";
-    // let player_name = "Siminious";
-    let account_id = pubg::get_account_id(player_name).await.unwrap();
-    let weapons = pubg::weapon_mastery(&account_id).await.unwrap();
-    let weapon_summaries = weapons.attributes.weapon_summaries;
+async fn player_stats(player: String) -> Result<warp::reply::Json, warp::Rejection> {
+    if !&player.is_empty() {
+        Ok(warp::reply::json(&pubg::get_player(&player).await.unwrap()))
+    } else {
+        Err(warp::reject::not_found())
+    }
+}
 
-    let mut weapon_list = Vec::from_iter(weapon_summaries);
-    weapon_list.sort_by(|(_, val_a), (_, val_b)| {
-        let weapon_a_stat = &val_a.as_ref().unwrap().stats_total;
-        let weapon_b_stat = &val_b.as_ref().unwrap().stats_total;
+async fn top_x_guns(player: String) -> Result<warp::reply::Json, warp::Rejection> {
+    if !&player.is_empty() {
+        // let player_name = "Kirri";
+        // let player_name = "DaliRafter";
+        // let player_name = "Siminious";
+        // let player_name = "SeeWats0n";
+        let account_id = pubg::get_account_id(&player).await.unwrap();
+        let weapons = pubg::weapon_mastery(&account_id).await.unwrap();
+        let weapon_summaries = weapons.attributes.weapon_summaries;
 
-        weapon_b_stat.kills.cmp(&weapon_a_stat.kills)
-    });
+        let mut weapon_list = Vec::from_iter(weapon_summaries);
+        weapon_list.sort_by(|(_, val_a), (_, val_b)| {
+            let weapon_a_stat = &val_a.as_ref().unwrap().stats_total;
+            let weapon_b_stat = &val_b.as_ref().unwrap().stats_total;
 
-    // gat top x weapons of kills
-    (0..5).for_each(|index| {
-        println!(
-            "{:#?} -- {:#?}",
-            // TODO: change this to a better module
-            inventory::inventory::item_friendly_name(&weapon_list[index].0),
-            &weapon_list[index].1.as_ref().unwrap().stats_total.kills
-        );
-    });
+            weapon_b_stat.kills.cmp(&weapon_a_stat.kills)
+        });
+
+        let mut top_weapons: Vec<Value> = vec![];
+        // gat top x weapons of kills
+        (0..5).for_each(|index| {
+            top_weapons.push(json!({
+                // TODO: change this to a better module
+                "gun":inventory::inventory::item_friendly_name(&weapon_list[index].0),
+                "kills":&weapon_list[index].1.as_ref().unwrap().stats_total.kills
+            }));
+        });
+        Ok(warp::reply::json(&top_weapons))
+    } else {
+        Err(warp::reject::not_found())
+    }
 }
 
 // use tokio for async function testing
