@@ -1,6 +1,6 @@
 use serde_json::{json, Deserializer, Error, Map, Value};
 use std::{convert::Infallible, iter::FromIterator};
-use warp::{http::StatusCode, Filter};
+use warp::{http::Method, http::StatusCode, Filter};
 
 mod inventory;
 mod pubg;
@@ -24,7 +24,14 @@ async fn start_server() {
     let player_route = warp::path!("player" / String).and_then(player_stats);
     let top_guns_route = warp::path!("topguns" / String).and_then(top_x_guns);
 
-    let routes = warp::get().and(hi.or(guns).or(player_route).or(top_guns_route)); //.or(player_route));
+    let cors = warp::cors()
+        .allow_any_origin()
+        // .allow_origin("https://pubg-291421.web.app")
+        .allow_methods(&[Method::GET]);
+
+    let routes = warp::get()
+        .and(hi.or(guns).or(player_route).or(top_guns_route))
+        .with(cors);
 
     warp::serve(routes).run(([0, 0, 0, 0], 8080)).await;
 }
