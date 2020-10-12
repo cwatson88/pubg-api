@@ -23,6 +23,7 @@ async fn start_server() {
 
     let player_route = warp::path!("player" / String).and_then(player_stats);
     let top_guns_route = warp::path!("topguns" / String).and_then(top_x_guns);
+    let lifetime_stats_route = warp::path!("lifetime" ).and_then(lifetime_stats);
 
     let cors = warp::cors()
         .allow_any_origin()
@@ -30,7 +31,7 @@ async fn start_server() {
         .allow_methods(&[Method::GET]);
 
     let routes = warp::get()
-        .and(hi.or(guns).or(player_route).or(top_guns_route))
+        .and(hi.or(guns).or(player_route).or(top_guns_route).or(lifetime_stats_route))
         .with(cors);
 
     warp::serve(routes).run(([0, 0, 0, 0], 8080)).await;
@@ -42,6 +43,15 @@ async fn player_stats(player: String) -> Result<warp::reply::Json, warp::Rejecti
     } else {
         Err(warp::reject::not_found())
     }
+}
+
+async fn lifetime_stats () -> Result<warp::reply::Json, warp::Rejection>{
+    
+    // if !&player.is_empty() {
+        Ok(warp::reply::json(&pubg::player_lifetime_stats("account.c7763c41ba4246d497db2b85ff68a897").await.unwrap()))
+    // } else {
+    //     Err(warp::reject::not_found())
+    // }
 }
 
 async fn top_x_guns(player: String) -> Result<warp::reply::Json, warp::Rejection> {
