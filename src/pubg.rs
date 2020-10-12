@@ -1,5 +1,7 @@
 use serde_json::{json, Error, Result as JSONResult, Value};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::{ iter::FromIterator};
 extern crate reqwest;
 pub mod weapon_structs;
 
@@ -9,6 +11,12 @@ pub mod guns {
     use std::fs::File;
     use std::io::prelude::*;
 
+
+    #[derive(Debug, Serialize, Deserialize)]
+    pub enum GunVsGun {
+        Gun(GunStats),
+        ErrMessage(String),
+    }
     // explanations for data below https://pubg.gamepedia.com/Data_Key
     // Note: Enums can be used with structs
     #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -39,12 +47,6 @@ pub mod guns {
         pwr: String,
         #[serde(rename = "SPD")]
         spd: String,
-    }
-
-    #[derive(Debug, Serialize, Deserialize)]
-    pub enum GunVsGun {
-        Gun(GunStats),
-        ErrMessage(String),
     }
 
     pub fn gun_vs_gun<'a>(gun1: &'a String, gun2: &'a String) -> GunVsGun {
@@ -92,6 +94,165 @@ pub mod guns {
         }
     }
 }
+
+#[derive(Debug, Serialize, Deserialize,Clone)]
+pub struct GameModes {
+    #[serde(rename = "duo")]
+    duo:GameModeStats,
+    #[serde(rename = "duo-fpp")]
+    duo_fpp:GameModeStats,
+    #[serde(rename = "solo")]
+    solo:GameModeStats,
+    #[serde(rename = "solo-fpp")]
+    solo_fpp:GameModeStats,
+    #[serde(rename = "squad")]
+    squad:GameModeStats,
+    #[serde(rename = "squad-fpp")]
+    squad_fpp:GameModeStats,
+   
+}
+/// Game Mode stats objects contain a player's aggregated stats for a game mode in the
+/// context of a season.
+#[derive(Debug, Serialize, Deserialize,Clone,Default)]
+pub struct GameModeStats {
+    /// Number of enemy players this player damaged that were killed by teammates
+    #[serde(rename = "assists")]
+    pub assists: Option<i64>,
+
+    /// Number of boost items used
+    #[serde(rename = "boosts")]
+    pub boosts: Option<i64>,
+
+    /// Number of kills during the most recent day played.
+    #[serde(rename = "dailyKills")]
+    pub daily_kills: Option<i64>,
+
+    /// Number of wins during the most recent day played.
+    #[serde(rename = "dailyWins")]
+    pub daily_wins: Option<i64>,
+
+    /// Total damage dealt. Note: Self inflicted damage is subtracted
+    #[serde(rename = "damageDealt")]
+    pub damage_dealt: Option<f64>,
+
+    #[serde(rename = "days")]
+    pub days: Option<i64>,
+
+    /// Number of enemy players knocked
+    #[serde(rename = "dBNOs")]
+    pub d_bn_os: Option<i64>,
+
+    /// Number of enemy players killed with headshots
+    #[serde(rename = "headshotKills")]
+    pub headshot_kills: Option<i64>,
+
+    /// Number of healing items used
+    #[serde(rename = "heals")]
+    pub heals: Option<i64>,
+
+    /// N/A
+    #[serde(rename = "killPoints")]
+    pub kill_points: Option<f64>,
+
+    /// Number of enemy players killed
+    #[serde(rename = "kills")]
+    pub kills: Option<i64>,
+
+    #[serde(rename = "longestKill")]
+    pub longest_kill: Option<f64>,
+
+    /// Longest time survived in a match
+    #[serde(rename = "longestTimeSurvived")]
+    pub longest_time_survived: Option<f64>,
+
+    /// Number of matches lost
+    #[serde(rename = "losses")]
+    pub losses: Option<i64>,
+
+    #[serde(rename = "maxKillStreaks")]
+    pub max_kill_streaks: Option<i64>,
+
+    /// Longest time survived in a match
+    #[serde(rename = "mostSurvivalTime")]
+    pub most_survival_time: Option<f64>,
+
+    /// Number of rank points the player was awarded. This value will be 0 when roundsPlayed < 10
+    #[serde(rename = "rankPoints")]
+    pub rank_points: Option<f64>,
+
+    /// Rank title in the form title-level
+    #[serde(rename = "rankPointsTitle")]
+    pub rank_points_title: Option<String>,
+
+    /// Number of times this player revived teammates
+    #[serde(rename = "revives")]
+    pub revives: Option<i64>,
+
+    /// Total distance traveled in vehicles measured in meters
+    #[serde(rename = "rideDistance")]
+    pub ride_distance: Option<f64>,
+
+    /// Number of kills while in a vehicle
+    #[serde(rename = "roadKills")]
+    pub road_kills: Option<i64>,
+
+    /// Highest number of kills in a single match
+    #[serde(rename = "roundMostKills")]
+    pub round_most_kills: Option<i64>,
+
+    /// Number of matches played
+    #[serde(rename = "roundsPlayed")]
+    pub rounds_played: Option<i64>,
+
+    /// Number of self-inflicted deaths
+    #[serde(rename = "suicides")]
+    pub suicides: Option<i64>,
+
+    /// Total distance traveled while swimming measured in meters
+    #[serde(rename = "swimDistance")]
+    pub swim_distance: Option<f64>,
+
+    /// Number of times this player killed a teammate
+    #[serde(rename = "teamKills")]
+    pub team_kills: Option<i64>,
+
+    /// Total time survived
+    #[serde(rename = "timeSurvived")]
+    pub time_survived: Option<f64>,
+
+    /// Number of times this player made it to the top 10 in a match
+    #[serde(rename = "top10s")]
+    pub top10_s: Option<i64>,
+
+    /// Number of vehicles destroyed
+    #[serde(rename = "vehicleDestroys")]
+    pub vehicle_destroys: Option<i64>,
+
+    /// Total distance traveled on foot measured in meters
+    #[serde(rename = "walkDistance")]
+    pub walk_distance: Option<f64>,
+
+    /// Number of weapons picked up
+    #[serde(rename = "weaponsAcquired")]
+    pub weapons_acquired: Option<i64>,
+
+    /// Number of kills during the most recent week played
+    #[serde(rename = "weeklyKills")]
+    pub weekly_kills: Option<i64>,
+
+    /// Number of wins during the most recent week played.
+    #[serde(rename = "weeklyWins")]
+    pub weekly_wins: Option<i64>,
+
+    /// N/A
+    #[serde(rename = "winPoints")]
+    pub win_points: Option<f64>,
+
+    /// Number of matches won
+    #[serde(rename = "wins")]
+    pub wins: Option<i64>,
+}
+
 
 async fn api_get(endpoint: &str) -> Result<Value, reqwest::Error> {
     use reqwest::header;
@@ -148,8 +309,36 @@ pub async fn get_account_id(player: &str) -> Result<String, Error> {
 /// get the weapon mastery stats for a player
 /// `/shards/stadia/players/{}/weapon_mastery`
 pub async fn weapon_mastery(
-    account_id: &str,
+    account_id: &str
 ) -> Result<weapon_structs::WeaponMasterySummary, Error> {
     let weapon_mastery_url = format!("/shards/stadia/players/{}/weapon_mastery", &account_id);
     serde_json::from_str(&api_get(&weapon_mastery_url).await.unwrap()["data"].to_string())
+}
+
+
+
+pub async fn player_lifetime_stats ( account_id: &str) 
+-> Result<GameModes ,Error> 
+{
+    let stat_search = format!("/shards/stadia/players/{}/seasons/lifetime?filter[gamepad]=true", &account_id);
+    let data:Result<GameModes,Error> = serde_json::from_str(&api_get(&stat_search).await.unwrap()["data"]["attributes"]["gameModeStats"].to_string());
+
+    let json_data = 
+    &api_get(&stat_search)
+    .await
+    .unwrap()["data"]["attributes"]["gameModeStats"].as_object()
+    .unwrap()
+    .into_iter()
+    .fold(GameModeStats::default(),|acc,curr|{
+        let (key, value) = curr;
+        let stats:GameModeStats = serde_json::from_value(value.clone()).unwrap();
+        
+        println!("{:#?}",stats);
+
+        acc.assists.unwrap() += stats.assists.unwrap();
+        acc
+    });
+    
+    data
+   
 }
