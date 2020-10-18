@@ -1,6 +1,6 @@
-use serde_json::{json, Deserializer, Error, Map, Value};
-use std::{convert::Infallible, iter::FromIterator};
-use warp::{http::StatusCode, Filter};
+use serde_json::{json,  Error, Value};
+use std::{ iter::FromIterator};
+use warp::{http::Method, Filter};
 
 mod inventory;
 mod pubg;
@@ -23,8 +23,16 @@ async fn start_server() {
 
     let player_route = warp::path!("player" / String).and_then(player_stats);
     let top_guns_route = warp::path!("topguns" / String).and_then(top_x_guns);
+    let lifetime_stats_route = warp::path!("lifetime" / String).and_then(lifetime_stats);
 
-    let routes = warp::get().and(hi.or(guns).or(player_route).or(top_guns_route)); //.or(player_route));
+    let cors = warp::cors()
+        .allow_any_origin()
+        // .allow_origin("https://pubg-291421.web.app")
+        .allow_methods(&[Method::GET]);
+
+    let routes = warp::get()
+        .and(hi.or(guns).or(player_route).or(top_guns_route).or(lifetime_stats_route))
+        .with(cors);
 
     warp::serve(routes).run(([0, 0, 0, 0], 8080)).await;
 }
@@ -32,6 +40,17 @@ async fn start_server() {
 async fn player_stats(player: String) -> Result<warp::reply::Json, warp::Rejection> {
     if !&player.is_empty() {
         Ok(warp::reply::json(&pubg::get_player(&player).await.unwrap()))
+    } else {
+        Err(warp::reject::not_found())
+    }
+}
+
+async fn lifetime_stats (player: String) -> Result<warp::reply::Json, warp::Rejection>{
+    
+    if !&player.is_empty() {
+        let account_id = pubg::get_account_id(&player).await.unwrap();
+        let res =&pubg::player_lifetime_stats(&account_id).await.unwrap(); 
+        Ok(warp::reply::json(&res))
     } else {
         Err(warp::reject::not_found())
     }
