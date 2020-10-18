@@ -29,17 +29,6 @@ pub struct Attributes {
     pub weapon_summaries: HashMap<String, Option<ItemWeapon>>,
 }
 
-/////////////// Weapon Stats
-///
-
-// /// The weapon summary for each weapon
-// #[derive(Serialize, Deserialize, Debug)]
-// pub struct WeaponSummary {
-//     /// The weapon summary
-//     #[serde(rename = "$Item_Weapon")]
-//     item_weapon: Option<ItemWeapon>,
-// }
-
 /// The weapon summary
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ItemWeapon {

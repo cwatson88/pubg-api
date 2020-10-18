@@ -1,4 +1,4 @@
-pub mod inventory {
+
     use std::collections::HashMap;
 
     pub fn item_friendly_name(item_code: &str) -> &'static str {
@@ -239,4 +239,3 @@ pub mod inventory {
 
         item_list.get(item_code).unwrap()
     }
-}
